@@ -1,0 +1,16 @@
+{
+  "name": "smb3",
+  "description": "NodeJS wrapper for the sambaclient",
+  "version": "1.0.0",
+  "main": "smb.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KenyanInAmerica/smb3.git"
+  },
+  "author": "Randy Osoti",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KenyanInAmerica/smb3/issues"
+  },
+  "homepage": "https://github.com/KenyanInAmerica/smb3#readme"
+}
