@@ -10,7 +10,7 @@ smbclient: Install on Ubuntu with `sudo apt-get install smbclient`.
 ```javascript
 const samba = require('smb3');
 
-let smbClient = new samba({
+const smbClient = new samba({
   address: '//server/folder',
   username: 'user',
   password: 'pass',
