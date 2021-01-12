@@ -1,13 +1,11 @@
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
-const path = require('path');
 
 class SMB {
-  constructor(options, _logger = console) {
+  constructor(options) {
     this.client = `smbclient -U ${options.username}`;
     this.creds = `${options.address} '${options.password}'`;
     this.protocol = `--max-protocol ${options.maxProtocol}`;
-    this.logger = _logger;
     return this;
   }
 
@@ -17,46 +15,42 @@ class SMB {
   }
 
   getOptions(localFolder, remoteFolder) {
-    return `'prompt OFF;recurse ON;lcd "${localFolder}";cd "${remoteFolder}";`;
+    return `'prompt OFF;recurse ON;lcd "${localFolder}";cd "${this.format(remoteFolder)}";`;
   }
 
-  getFiles(remoteFolder, localFolder, subFolder) {
-    this.logger.log('Getting files from samba share');
-    const options = subFolder
-      ? this.getOptions(localFolder, path.join(remoteFolder, subFolder))
-      : this.getOptions(localFolder, remoteFolder);
+  format(path) {
+    return path.replace(/\\\\/g, '\\').replace(/\//g, '\\');
+  }
+
+  getFiles(remoteFolder, localFolder) {
+    const options = this.getOptions(localFolder, remoteFolder);
     const cmd = options.concat(' mget *\'');
     return this.execute(cmd);
   }
 
   sendFiles(localFolder, remoteFolder) {
-    this.logger.log('Sending files to samba share');
     const options = this.getOptions(localFolder, remoteFolder);
     const cmd = options.concat(' mput *\'');
     return this.execute(cmd);
   }
 
   getFile(remoteFile, localFile) {
-    this.logger.log(`Getting ${remoteFile} from samba share`);
-    const cmd = `'get ${remoteFile} ${localFile}'`;
+    const cmd = `'get "${this.format(remoteFile)}" "${localFile}"'`;
     return this.execute(cmd);
   }
 
   sendFile(localFile, remoteFile) {
-    this.logger.log(`Putting ${localFile} in samba share`);
-    const cmd = `'put ${localFile} ${remoteFile}'`;
+    const cmd = `'put "${localFile}" "${this.format(remoteFile)}"'`;
     return this.execute(cmd);
   }
 
   deleteFile(remoteDir, remoteFile) {
-    this.logger.log(`Deleting ${remoteFile} in samba share`);
-    const cmd = `'cd ${remoteDir};rm ${remoteFile}'`;
+    const cmd = `'cd "${this.format(remoteDir)}";rm "${remoteFile}"'`;
     return this.execute(cmd);
   }
 
   ping(loc) {
-    this.logger.log(loc ? `Pinging samba share at loc \'${loc}\'` : 'Pinging samba share');
-    const cmd = loc ? `'dir "${loc}"'` : '\'dir\'';
+    const cmd = loc ? `'dir "${this.format(loc)}"'` : '\'dir\'';
     return this.execute(cmd)
       .then(() => true)
       .catch((err) => {
@@ -66,8 +60,7 @@ class SMB {
   }
 
   mkDir(loc) {
-    this.logger.log(`Making directory ${loc} on samba share`);
-    const cmd = `'mkdir "${loc}"'`;
+    const cmd = `'mkdir "${this.format(loc)}"'`;
     return this.execute(cmd)
       .then(() => this.ping(loc));
   }
